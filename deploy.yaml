@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nebula-ci-plugins-common-result
+  labels:
+    name: nebula-ci-plugins-common-result
+  namespace: nebula
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: nebula-ci-plugins-common-result
+  template:
+    metadata:
+      labels: 
+       name: nebula-ci-plugins-common-result
+    spec:
+      containers:
+      - name: nebula-ci-plugins-common-result
+        image: nebula/ci/plugins/common/result:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: nfs
+          mountPath: /nfs
+      volumes:
+      - name: nfs
+        hostPath:
+          path: /nfs    
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nebula-ci-plugins-common-result
+  labels: 
+   name: nebula-ci-plugins-common-result
+  namespace: nebula
+spec:
+  ports:
+  - port: 80
+    targetPort: 5000
+  selector:
+    name: nebula-ci-plugins-common-result
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+    name: nebula-ci-plugins-common-result
+    namespace: nebula
+spec:
+    rules:
+    -  http:
+        paths:
+        - path: /api/ci/plugins/common/result
+          backend:
+            serviceName: nebula-ci-plugins-common-result
+            servicePort: 80
